@@ -16,7 +16,7 @@ dummy_chart_data = {
     ],  # Corresponds to xAxis.data
     "values": [
         120,
-        200,
+        10,
         150,
         80,
         70,
