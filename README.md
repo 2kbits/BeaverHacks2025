@@ -1,6 +1,11 @@
 # BeaverHacks2025
 
-File hierarchy example:
+To run:
+Make sure both terminals are in a python venv
+on terminal run "python -m http.server 8080"
+another terminal run "uvicorn dummyTests.main:app --reload --port 8000"
+
+File hierarchy example
 
 *   **BeaverHacks2025/**
     *   **backend/** `# All FastAPI backend code (Your friend's focus)`
