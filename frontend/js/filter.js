@@ -38,9 +38,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   
     // --- API endpoint URLs ---
-    const optionsApiUrl = "http://127.0.0.1:8000/api/filter-options";
-    const findArrivalBaseUrl =
-      "http://127.0.0.1:8000/api/find-arrival"; // Base URL for finding arrivals
+    const optionsApiUrl = "http://10.248.152.152:8000/api/filter-options";
+    const findArrivalBaseUrl = "http://10.248.152.152:8000/api/find-arrival";
   
     // --- Helper function to populate route select dropdown ---
     function populateRouteSelect(selectElement, optionsArray, defaultLabel) {
