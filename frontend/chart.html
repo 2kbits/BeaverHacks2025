@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bus Route Delays Chart</title>
+    <!-- 1. Include the ECharts library ONLY on this page -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <!-- Link to the shared CSS file -->
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="container chart-container">
+      <h1>Average Scheduled Delay per Bus Route</h1>
+
+      <!-- 2. Prepare the DOM element for ECharts ONLY on this page -->
+      <div id="main"></div> <!-- Chart will be rendered here -->
+
+      <div class="navigation-links">
+         <a href="index.html">&laquo; Back to Home</a>
+      </div>
+
+    </div> <!-- end container -->
+
+    <!-- 3. Link to our JavaScript file (use defer) ONLY on this page -->
+    <script src="js/script.js" defer></script>
+  </body>
+</html>
