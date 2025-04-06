@@ -39,30 +39,16 @@ UNIQUE_STOP_NAMES: List[str] = [] # Cache for stop names
 
 # --- Pydantic Models ---
 
-# Model for the chart endpoint
-class ChartDataResponse(BaseModel):
-    routes: List[str] = Field(..., description="List of unique bus route names.")
+# Model for the stop delay chart endpoint
+class StopDelayChartDataResponse(BaseModel):
+    stop_names: List[str] = Field(..., description="List of unique bus stop names.")
     avg_delays: List[float] = Field(
-        ..., description="List of corresponding average scheduled delays in minutes."
+        ..., description="List of corresponding average scheduled delays in minutes for each stop."
     )
 
-# Model for original filter endpoint (kept for potential use)
-class FilterOptionsResponse(BaseModel):
-    routes: List[str] = Field(..., description="List of unique bus route names.")
-
-# Model for original filter endpoint (kept for potential use)
-class ArrivalDataResponse(BaseModel):
-    scheduled_arrival: Optional[str] = Field(
-        None, description="First scheduled arrival time found for the criteria (ISO format or similar)."
-    )
-    average_delay: float = Field(
-        ..., description="Average scheduled delay in minutes for the specified route and hour."
-    )
-
-# *** MODIFIED StopRouteScheduleInfo model ***
+# Model for StopRouteScheduleInfo (used in /stop-schedule)
 class StopRouteScheduleInfo(BaseModel):
     route: str = Field(..., description="The bus route identifier (published_line).")
-    # Changed field name and description to reflect using scheduled delay
     average_scheduled_delay_at_schedule: Optional[float] = Field(
         None, description="Average scheduled delay (in minutes) for all records matching the next_scheduled_arrival time. Null if no data or next arrival found."
     )
@@ -73,6 +59,7 @@ class StopRouteScheduleInfo(BaseModel):
         None, description="The scheduled arrival time string for the next bus. Null if none found."
     )
 
+# Model for StopScheduleResponse (used in /stop-schedule)
 class StopScheduleResponse(BaseModel):
     stop_name: str = Field(..., description="The requested stop name.")
     requested_time: str = Field(..., description="The requested time in HH:MM format.")
@@ -107,11 +94,13 @@ def load_bus_data():
             COL_DELAY_MINUTES, COL_HOUR, COL_SCHEDULED_ARRIVAL,
             COL_PREDICTION_ERROR
         }
+        # Add any other columns from your CSV header list if needed for other endpoints
 
         with open(CSV_FILE_PATH, mode="r", encoding="utf-8-sig") as csvfile:
             reader = csv.DictReader(csvfile)
             if not reader.fieldnames:
                  raise ValueError("CSV file appears to be empty or has no header row.")
+            # Check if ALL required columns are present
             if not required_columns.issubset(reader.fieldnames):
                 missing = required_columns - set(reader.fieldnames)
                 available = list(reader.fieldnames)
@@ -120,62 +109,87 @@ def load_bus_data():
                 )
 
             for i, row in enumerate(reader):
-                line_num = i + 2
+                line_num = i + 2 # For potential error reporting
                 try:
+                    # Extract required fields, handling potential missing keys gracefully
                     stop_name = row.get(COL_STOP_NAME, "").strip()
                     bus_id = row.get(COL_BUS_ID, "").strip()
                     route = row.get(COL_ROUTE, "").strip()
                     hour_str = row.get(COL_HOUR)
                     delay_str = row.get(COL_DELAY_MINUTES)
                     scheduled_arrival_str = row.get(COL_SCHEDULED_ARRIVAL)
-                    prediction_error_str = row.get(COL_PREDICTION_ERROR)
+                    prediction_error_str = row.get(COL_PREDICTION_ERROR) # Keep loading if needed elsewhere
 
-                    # --- Start Validation ---
+                    # --- Start Basic Validation ---
                     if not all([stop_name, bus_id, route, scheduled_arrival_str]):
+                        # logger.debug(f"Skipping row {line_num}: Missing essential string data.")
                         skipped_count += 1; continue
                     if hour_str is None or delay_str is None or prediction_error_str is None:
+                        # logger.debug(f"Skipping row {line_num}: Missing numeric/time string data.")
                          skipped_count += 1; continue
+                    # --- End Basic Validation ---
 
-                    hour = int(hour_str)
-                    delay_minutes = float(delay_str)
-                    prediction_error_minutes = float(prediction_error_str)
+                    # --- Start Conversion and Detailed Validation ---
+                    try:
+                        hour = int(hour_str)
+                        delay_minutes = float(delay_str)
+                        prediction_error_minutes = float(prediction_error_str) # Keep converting if needed
 
-                    if not (0 <= hour <= 23): skipped_count += 1; continue
-                    if not math.isfinite(delay_minutes): skipped_count += 1; continue
-                    if not math.isfinite(prediction_error_minutes): skipped_count += 1; continue
-                    if len(scheduled_arrival_str) < 16: skipped_count += 1; continue
-                    try: datetime.strptime(scheduled_arrival_str, '%Y-%m-%d %H:%M:%S')
-                    except (ValueError, TypeError): skipped_count += 1; continue
-                    # --- End Validation ---
+                        if not (0 <= hour <= 23):
+                            # logger.debug(f"Skipping row {line_num}: Invalid hour value '{hour_str}'.")
+                            skipped_count += 1; continue
+                        if not math.isfinite(delay_minutes):
+                            # logger.debug(f"Skipping row {line_num}: Non-finite delay value '{delay_str}'.")
+                            skipped_count += 1; continue
+                        if not math.isfinite(prediction_error_minutes): # Keep validating if needed
+                            # logger.debug(f"Skipping row {line_num}: Non-finite prediction error value '{prediction_error_str}'.")
+                            skipped_count += 1; continue
+
+                        if len(scheduled_arrival_str) < 16: # Basic check for 'YYYY-MM-DD HH:MM'
+                             # logger.debug(f"Skipping row {line_num}: Invalid scheduled arrival format '{scheduled_arrival_str}'.")
+                             skipped_count += 1; continue
+                        datetime.strptime(scheduled_arrival_str, '%Y-%m-%d %H:%M:%S')
+
+                    except (ValueError, TypeError) as conv_err:
+                        # logger.debug(f"Skipping row {line_num}: Conversion error - {conv_err}. Values: hour='{hour_str}', delay='{delay_str}', arrival='{scheduled_arrival_str}'.")
+                        skipped_count += 1; continue
+                    # --- End Conversion and Detailed Validation ---
 
                     processed_row = {
-                        COL_STOP_NAME: stop_name, COL_BUS_ID: bus_id, COL_ROUTE: route,
-                        COL_HOUR: hour, COL_DELAY_MINUTES: delay_minutes,
+                        COL_STOP_NAME: stop_name,
+                        COL_BUS_ID: bus_id,
+                        COL_ROUTE: route,
+                        COL_HOUR: hour,
+                        COL_DELAY_MINUTES: delay_minutes,
                         COL_SCHEDULED_ARRIVAL: scheduled_arrival_str,
-                        COL_PREDICTION_ERROR: prediction_error_minutes
+                        COL_PREDICTION_ERROR: prediction_error_minutes # Include if needed elsewhere
                     }
                     BUS_DATA.append(processed_row)
                     stop_name_set.add(stop_name) # Add valid stop name to set
                     processed_count += 1
 
-                except (ValueError, TypeError) as conv_err:
+                except Exception as inner_e: # Catch unexpected errors within the loop for a specific row
+                    logger.warning(f"Skipping row {line_num} due to unexpected error: {inner_e}")
                     skipped_count += 1; continue
 
         UNIQUE_STOP_NAMES = sorted(list(stop_name_set))
         logger.info(
-            f"Successfully processed {processed_count} records. Skipped {skipped_count} rows. Found {len(UNIQUE_STOP_NAMES)} unique stop names."
+            f"Successfully processed {processed_count} records. Skipped {skipped_count} rows due to validation/errors. Found {len(UNIQUE_STOP_NAMES)} unique stop names."
         )
-        if processed_count == 0:
-             logger.error("No valid data records were loaded. Check CSV format/content.")
-             if skipped_count > 0: data_load_error = "CSV contains rows, but none could be processed successfully."
-             else: data_load_error = "CSV file appears empty or contains no processable data."
+        if processed_count == 0 and skipped_count > 0:
+             data_load_error = "CSV contains rows, but none could be processed successfully due to data format or validation issues."
+             logger.error(data_load_error)
+        elif processed_count == 0:
+             data_load_error = "CSV file appears empty or contains no processable data matching requirements."
+             logger.error(data_load_error)
 
     except FileNotFoundError as e:
         data_load_error = f"Error loading data: {e}"; logger.error(data_load_error)
-    except ValueError as e:
+    except ValueError as e: # Catches header issues or empty file from DictReader checks
         data_load_error = f"CSV format or data error: {e}"; logger.error(data_load_error)
-    except Exception as e:
+    except Exception as e: # Catch broader exceptions during file open or initial read
         data_load_error = f"An unexpected error occurred during data loading: {e}"; logger.exception(data_load_error)
+
 
 # --- Load data when the module is imported ---
 load_bus_data()
@@ -188,73 +202,46 @@ def check_data_loaded():
     """Raises HTTPException if data failed to load or is unavailable."""
     if data_load_error:
         logger.error(f"Data loading check failed: {data_load_error}")
-        raise HTTPException(status_code=500, detail="Internal Server Error: Could not load bus data.")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: Could not load bus data. Reason: {data_load_error}")
     if not BUS_DATA:
         logger.warning("Data check: BUS_DATA list is empty.")
-        raise HTTPException(status_code=404, detail="No bus data available.")
+        raise HTTPException(status_code=503, detail="Service Unavailable: No bus data has been loaded.")
 
 # --- API Endpoints ---
 
-# Endpoint for the "Average Scheduled Delay per Bus Route" chart
-@router.get("/bus-data", response_model=ChartDataResponse)
-async def get_bus_data_for_chart():
+# Endpoint: Average Scheduled Delay per STOP NAME
+@router.get("/bus-data", response_model=StopDelayChartDataResponse)
+async def get_stop_delay_data_for_chart():
     """
-    Calculates the average scheduled delay for each unique bus route across all data.
-    Used to populate the main overview chart.
+    Calculates the average scheduled delay for each unique bus **stop** across all data.
+    Used to populate an overview chart showing average delays per stop.
     """
     check_data_loaded()
-    route_stats = defaultdict(lambda: {"sum_delay": 0.0, "count": 0})
-    for record in BUS_DATA:
-        route_name = record.get(COL_ROUTE)
-        delay_minutes = record.get(COL_DELAY_MINUTES) # Uses scheduled delay
-        if route_name and isinstance(delay_minutes, float) and math.isfinite(delay_minutes):
-            route_stats[route_name]["sum_delay"] += delay_minutes
-            route_stats[route_name]["count"] += 1
+    stop_stats = defaultdict(lambda: {"sum_delay": 0.0, "count": 0})
 
-    chart_output = {"routes": [], "avg_delays": []}
-    sorted_routes = sorted(route_stats.keys())
-    for route in sorted_routes:
-        stats = route_stats[route]
+    for record in BUS_DATA:
+        stop_name = record.get(COL_STOP_NAME)
+        delay_minutes = record.get(COL_DELAY_MINUTES)
+
+        if stop_name and isinstance(delay_minutes, float) and math.isfinite(delay_minutes):
+            stop_stats[stop_name]["sum_delay"] += delay_minutes
+            stop_stats[stop_name]["count"] += 1
+
+    chart_output = {"stop_names": [], "avg_delays": []}
+    sorted_stop_names = sorted(stop_stats.keys())
+
+    for stop in sorted_stop_names:
+        stats = stop_stats[stop]
         if stats["count"] > 0:
             average_delay = stats["sum_delay"] / stats["count"]
-            chart_output["routes"].append(route)
+            chart_output["stop_names"].append(stop)
             chart_output["avg_delays"].append(round(average_delay, 2))
 
-    if not chart_output["routes"]: logger.warning("No valid route data found to generate chart output.")
+    if not chart_output["stop_names"]:
+        logger.warning("No valid stop data with delays found to generate chart output.")
+
+    logger.info(f"Generated average delay data for {len(chart_output['stop_names'])} stops.")
     return chart_output
-
-# Endpoint for populating route filter (if ever needed again)
-@router.get("/filter-options", response_model=FilterOptionsResponse)
-async def get_filter_options():
-    """ Provides unique bus route names available in the dataset. """
-    check_data_loaded()
-    unique_routes = set(record.get(COL_ROUTE) for record in BUS_DATA if record.get(COL_ROUTE))
-    sorted_routes = sorted(list(unique_routes))
-    if not sorted_routes: logger.warning("Filter options requested, but no unique routes found.")
-    return {"routes": sorted_routes}
-
-# Original endpoint for finding delay by route/hour (kept for reference)
-@router.get("/find-arrival", response_model=ArrivalDataResponse)
-async def find_average_delay_for_route_hour(
-    route: str = Query(..., description="The bus route name (e.g., 'M15')."),
-    hour: int = Query(..., ge=0, le=23, description="The hour of the day (0-23).")
-):
-    """ (Original endpoint) Finds the average scheduled delay for a specific bus route/hour. """
-    check_data_loaded()
-    logger.info(f"Original endpoint search for route: '{route}', hour: {hour}")
-    total_delay = 0.0; record_count = 0; first_scheduled_arrival = None
-    for record in BUS_DATA:
-        if record.get(COL_ROUTE) == route and record.get(COL_HOUR) == hour:
-            delay = record.get(COL_DELAY_MINUTES)
-            total_delay += delay; record_count += 1
-            if first_scheduled_arrival is None: first_scheduled_arrival = record.get(COL_SCHEDULED_ARRIVAL)
-    if record_count > 0:
-        average_delay = total_delay / record_count
-        logger.info(f"Found {record_count} records for route '{route}' at hour {hour}. Avg delay: {average_delay:.2f}")
-        return {"scheduled_arrival": first_scheduled_arrival, "average_delay": round(average_delay, 2)}
-    else:
-        logger.info(f"No matching records found for route '{route}' at hour {hour}.")
-        raise HTTPException(status_code=404, detail=f"No arrival data found for route '{route}' at hour {hour}")
 
 # Endpoint for populating stop name filter dropdown
 @router.get("/stop-names", response_model=StopNamesResponse)
@@ -283,63 +270,77 @@ async def get_schedule_for_stop(
 
     stop_specific_data = [rec for rec in BUS_DATA if rec.get(COL_STOP_NAME) == stop_name]
     if not stop_specific_data:
+        logger.warning(f"No data found for stop name: '{stop_name}'")
         raise HTTPException(status_code=404, detail=f"No data found for stop name: '{stop_name}'")
 
     routes_data = defaultdict(list)
     for record in stop_specific_data:
         route = record.get(COL_ROUTE)
         if route: routes_data[route].append(record)
+
     if not routes_data:
+         logger.warning(f"Data found for stop '{stop_name}', but no valid routes associated.")
          return StopScheduleResponse(stop_name=stop_name, requested_time=f"{hour:02d}:{minute:02d}", routes_at_stop=[])
 
     results_for_routes: List[StopRouteScheduleInfo] = []
     user_time_obj = time(hour, minute)
 
     for route, records in routes_data.items():
-        logger.debug(f"Processing route: {route} for stop '{stop_name}'")
+        # logger.debug(f"Processing route: {route} for stop '{stop_name}'")
         next_bus: Optional[Dict] = None
+        min_future_scheduled_dt: Optional[datetime] = None
+
         valid_records_with_dt = []
         for record in records:
-             try: dt = datetime.strptime(record[COL_SCHEDULED_ARRIVAL], '%Y-%m-%d %H:%M:%S'); valid_records_with_dt.append((dt, record))
-             except (ValueError, TypeError): continue
-        valid_records_with_dt.sort(key=lambda item: item[0])
-        for scheduled_dt, record in valid_records_with_dt:
-            if scheduled_dt.time() >= user_time_obj: next_bus = record; break
+             scheduled_arrival_str = record.get(COL_SCHEDULED_ARRIVAL)
+             if not scheduled_arrival_str: continue
+             try:
+                 scheduled_dt = datetime.strptime(scheduled_arrival_str, '%Y-%m-%d %H:%M:%S')
+                 if scheduled_dt.time() >= user_time_obj:
+                     valid_records_with_dt.append((scheduled_dt, record))
+             except (ValueError, TypeError):
+                 # logger.debug(f"Could not parse datetime for record on route {route}: {scheduled_arrival_str}")
+                 continue
 
-        # *** MODIFIED CALCULATION: Average SCHEDULED DELAY for the Found Schedule ***
+        valid_records_with_dt.sort(key=lambda item: item[0])
+
+        if valid_records_with_dt:
+            next_scheduled_dt, next_bus = valid_records_with_dt[0]
+            # logger.debug(f"Next bus found for route {route}: ID {next_bus.get(COL_BUS_ID)} scheduled at {next_scheduled_dt}")
+        else:
+            # logger.debug(f"No scheduled arrivals found for route {route} at or after {user_time_obj.strftime('%H:%M')}")
+            next_bus = None
+
         avg_scheduled_delay: Optional[float] = None
         if next_bus:
             target_schedule_str = next_bus.get(COL_SCHEDULED_ARRIVAL)
             total_scheduled_delay = 0.0
             delay_count = 0
-            # Iterate through ALL records for this route/stop again to find matches
+
             for record in records:
-                # Find records matching the exact scheduled arrival time string
                 if record.get(COL_SCHEDULED_ARRIVAL) == target_schedule_str:
-                    # Use the SCHEDULED DELAY column
                     scheduled_delay = record.get(COL_DELAY_MINUTES)
                     if isinstance(scheduled_delay, float) and math.isfinite(scheduled_delay):
                         total_scheduled_delay += scheduled_delay
                         delay_count += 1
+                    # else: logger.debug(f"Record matching schedule {target_schedule_str} for route {route} has invalid delay: {scheduled_delay}")
 
             if delay_count > 0:
                 avg_scheduled_delay = round(total_scheduled_delay / delay_count, 2)
-                logger.debug(f"Avg scheduled delay for {route} @ {target_schedule_str}: {avg_scheduled_delay} ({delay_count} records)")
+                # logger.debug(f"Avg scheduled delay for {route} @ {target_schedule_str}: {avg_scheduled_delay} ({delay_count} records)")
             else:
-                 logger.warning(f"Found next bus for {route} @ {target_schedule_str}, but no valid scheduled delays to average.")
-        else:
-            logger.debug(f"No next bus found for route {route}, cannot calculate scheduled delay.")
+                 logger.warning(f"Found next bus for {route} @ {target_schedule_str}, but no valid scheduled delays found matching this exact time to average.")
+        # else:
+            # logger.debug(f"No next bus found for route {route}, cannot calculate scheduled delay.")
 
-
-        # --- Prepare result for this route ---
         results_for_routes.append(StopRouteScheduleInfo(
             route=route,
-            # Use the new field name and the calculated scheduled delay average
             average_scheduled_delay_at_schedule=avg_scheduled_delay,
             next_bus_id=next_bus.get(COL_BUS_ID) if next_bus else None,
             next_scheduled_arrival=next_bus.get(COL_SCHEDULED_ARRIVAL) if next_bus else None,
         ))
 
     results_for_routes.sort(key=lambda r: r.route)
+    logger.info(f"Returning schedule info for {len(results_for_routes)} routes at stop '{stop_name}'.")
     return StopScheduleResponse(stop_name=stop_name, requested_time=f"{hour:02d}:{minute:02d}", routes_at_stop=results_for_routes)
 

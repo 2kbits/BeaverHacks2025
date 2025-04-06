@@ -1,0 +1,28 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment (if you use one, e.g., venv, .venv)
+venv/
+.venv/
+env/
+.env/
+*.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE specific files (add yours if needed)
+.idea/
+.vscode/
+
+# Data files you might not want to commit (if large or generated)
+# backend/data/bus_arrival_data.db # Add this if you don't want to track the DB
+# backend/data/busDatabase.csv # Add this if the CSV is huge and downloaded separately
+
+# Test outputs / coverage reports
+htmlcov/
+.pytest_cache/
+.coverage
