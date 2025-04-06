@@ -62,11 +62,6 @@ body {
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
   }
   
-  /* Specific container adjustments for the chart page */
-  .chart-container {
-      /* Allow chart container to be wider if needed */
-  }
-  
   /* Styling for navigation links like "Back to Home" */
   .navigation-links {
       margin-top: 30px;
@@ -85,3 +80,166 @@ body {
       text-decoration: underline;
   }
   
+  /* --- Styles for Filter Form --- */
+.filter-form {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    display: flex; /* Arrange items */
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 20px; /* Space between form groups */
+    justify-content: center; /* Center items */
+    align-items: flex-end; /* Align items to bottom */
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column; /* Stack label and select */
+    align-items: flex-start; /* Align label left */
+    min-width: 150px; /* Minimum width for each group */
+  }
+  
+  .form-group label {
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .form-group select,
+  .form-group button {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    width: 100%; /* Make select/button take full width of form-group */
+    box-sizing: border-box; /* Include padding/border in width */
+  }
+  
+  .form-group select {
+    background-color: #fff;
+  }
+  
+  /* Adjust button alignment within its group */
+  .form-group button.button-link {
+      margin-top: auto; /* Push button down if label makes group taller */
+      width: auto; /* Allow button to size naturally */
+      padding: 10px 20px; /* Adjust padding */
+  }
+  
+  /* Area for displaying results */
+  #filtered-results {
+      margin-top: 30px;
+      padding: 15px;
+      border: 1px dashed #ccc;
+      background-color: #fafafa;
+      min-height: 50px;
+      text-align: left;
+  }
+/* --- Styles for Time Input Group --- */
+.time-input-group {
+    min-width: 120px; /* Adjust width as needed */
+}
+
+.input-with-buttons {
+  display: flex;
+  align-items: center; /* Vertically align input and buttons */
+  border: 1px solid #ccc; /* Group them visually */
+  border-radius: 4px;
+  overflow: hidden; /* Keep buttons contained */
+  background-color: #fff; /* Background for the group */
+}
+
+.input-with-buttons input[type="number"] {
+  width: 50px; /* Adjust width of number input */
+  padding: 10px 5px;
+  border: none; /* Remove border from input itself */
+  text-align: center;
+  font-size: 1em;
+  /* Remove spinners (optional, might not work in all browsers) */
+  -moz-appearance: textfield; /* Firefox */
+}
+.input-with-buttons input[type="number"]::-webkit-outer-spin-button,
+.input-with-buttons input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0; /* Safari */
+}
+
+
+.input-with-buttons button {
+  background-color: #eee;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  font-size: 1.2em;
+  font-weight: bold;
+  padding: 8px 10px; /* Adjust padding */
+  line-height: 1; /* Ensure text aligns well */
+  transition: background-color 0.2s ease;
+}
+.input-with-buttons button:hover {
+  background-color: #ddd;
+}
+.input-with-buttons button:active {
+  background-color: #ccc;
+}
+
+/* Specific button borders within the group */
+.input-with-buttons .decrement-btn {
+  border-right: 1px solid #ccc;
+}
+.input-with-buttons .increment-btn {
+  border-left: 1px solid #ccc;
+}
+
+
+/* Adjust main filter button alignment if needed */
+.form-group button.button-link {
+    /* ... existing styles ... */
+}
+
+/* Area for displaying results */
+#filtered-results {
+    /* ... existing styles ... */
+}
+
+/* Area for displaying results */
+#filtered-results {
+    margin-top: 30px;
+    padding: 15px;
+    border: 1px dashed #ccc;
+    background-color: #fafafa;
+    min-height: 50px;
+    text-align: left;
+    display: flex; /* Arrange result boxes side-by-side */
+    flex-wrap: wrap; /* Allow wrapping if needed */
+    gap: 20px; /* Space between boxes */
+    justify-content: center; /* Center boxes */
+}
+
+/* Styling for individual result boxes */
+.result-box {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px 20px;
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.05);
+    text-align: center;
+    min-width: 200px; /* Minimum width */
+    flex: 1; /* Allow boxes to grow */
+    max-width: 300px; /* Optional max width */
+}
+
+.result-box h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 1.1em;
+}
+
+.result-box p {
+    font-size: 1.2em;
+    color: #0056b3; /* Different color for the time */
+    margin-bottom: 0;
+}
