@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 # --- Configuration ---
 CURRENT_DIR = Path(__file__).parent
 BACKEND_DIR = CURRENT_DIR.parent.parent
-CSV_FILE_PATH = BACKEND_DIR / "data" / "busDatabase.csv"
+CSV_FILE_PATH = BACKEND_DIR / "data" / "busDatabase2.csv"
 
 # --- Column Names ---
 # !! IMPORTANT: Verify these match your busDatabase.csv headers exactly !!

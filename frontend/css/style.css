@@ -2,327 +2,427 @@
 
 /* General body styling */
 body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4; /* Keep background color as a fallback */
-    color: #333;
-    min-height: 100vh;
-  }
-  
-  /* Grid container for the layout */
-  .grid-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Two equal columns */
-    grid-template-rows: 1fr 1fr; /* Two equal rows */
-    gap: 10px; /* Spacing between items */
-    width: 100%; /* Full width */
-    height: 100vh; /* Full viewport height */
-    box-sizing: border-box; /* Include padding/border in the width/height */
-    padding: 20px; /* Add some padding around the grid */
-    position: relative; /* Needed for z-index stacking context */
-  }
-  
-  /* Positioning of images */
-  .image-item {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden; /* Prevent images from overflowing */
-    /* Removed background color, image tag will handle it */
-    border-radius: 8px; /* Optional rounded corners */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional shadow */
-  }
-  
-  .image-item img {
-    width: 100%; /* Make images fill their container */
-    height: 100%;
-    object-fit: cover; /* Maintain aspect ratio and cover the area */
-    display: block; /* Remove extra space below image */
-  }
-  
-  /* Specific image positions */
-  .top-left {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  
-  .top-right {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  
-  .bottom-left {
-    grid-column: 1;
-    grid-row: 2;
-  }
-  
-  .bottom-right {
-    grid-column: 2;
-    grid-row: 2;
-  }
-  
-  /* Content area styling (where the text box goes) */
-  .content-area {
-    grid-column: 1 / span 2; /* Span both columns */
-    grid-row: 1 / span 2; /* Span both rows */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1; /* Ensure content is on top of images */
-    padding: 20px; /* Add padding if content might touch edges */
-    box-sizing: border-box;
-  }
-  
-  /* Centering container (your existing content container) */
-  .container {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    max-width: 800px; /* Adjust max width */
-    width: 90%; /* Responsive width, slightly wider */
-    max-height: calc(
-      100vh - 80px
-    ); /* Prevent container from exceeding viewport height minus padding */
-    overflow-y: auto; /* Add scroll if content overflows vertically */
-  }
-  
-  /* --- Remaining styles from your original file --- */
-  /* (h1, p, button-link, #main, navigation-links, filter-form, etc.) */
-  /* ... ensure all your other styles are still here ... */
-  
-  h1 {
-    color: #2c3e50;
-    margin-bottom: 20px;
-  }
-  
-  p {
-    line-height: 1.6;
-    margin-bottom: 25px;
-  }
-  
-  /* Button styling for the link */
-  .button-link {
-    display: inline-block;
-    padding: 12px 25px;
-    background-color: #3498db;
-    color: #ffffff;
-    text-decoration: none;
-    border-radius: 5px;
-    font-size: 1em;
-    transition: background-color 0.3s ease;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .button-link:hover,
-  .button-link:focus {
-    background-color: #2980b9;
-    outline: none;
-  }
-  
-  /* Styling for the chart container div */
-  #main {
-    width: 100%;
-    /* max-width: 1000px; */ /* Let container control max width */
-    height: 500px; /* Keep explicit height for chart */
-    border: 1px solid #eee;
-    margin: 20px auto;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
-  }
-  
-  /* Styling for navigation links like "Back to Home" */
-  .navigation-links {
-    margin-top: 30px;
-    text-align: center;
-  }
-  
-  .navigation-links a {
-    color: #3498db;
-    text-decoration: none;
-    padding: 5px 10px;
-    transition: color 0.3s ease;
-  }
-  
-  .navigation-links a:hover {
-    color: #2980b9;
-    text-decoration: underline;
-  }
-  
-  /* --- Styles for Filter Form --- */
-  .filter-form {
-    margin-top: 20px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-    align-items: flex-end;
-  }
-  
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    min-width: 150px;
-  }
-  
-  .form-group label {
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #555;
-    width: 100%;
-    text-align: center;
-  }
-  
-  .form-group select,
-  .form-group button {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 16px;
-    font-size: 1em;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  
-  .form-group select {
-    background-color: #fff;
-  }
-  
-  /* Adjust button alignment within its group */
-  .form-group button.button-link {
-    margin-top: auto;
-    width: auto;
-    padding: 10px 20px;
-  }
-  
-  /* Area for displaying results */
-  #filtered-results {
-    margin-top: 30px;
-    padding: 15px;
-    border: 1px dashed #ccc;
-    background-color: #fafafa;
-    min-height: 50px;
-    text-align: left;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-  }
-  /* --- Styles for Time Input Group --- */
-  .time-input-group {
-    min-width: 120px;
-  }
-  
-  .input-with-buttons {
-    display: flex;
-    align-items: center;
-    border: 1px solid #ccc;
-    border-radius: 16px;
-    overflow: hidden;
-    background-color: #fff;
-  }
-  
-  .input-with-buttons input[type="number"] {
-    width: 50px;
-    padding: 10px 5px;
-    border: none;
-    text-align: center;
-    font-size: 1em;
-    -moz-appearance: textfield;
-  }
-  .input-with-buttons input[type="number"]::-webkit-outer-spin-button,
-  .input-with-buttons input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  
-  .input-with-buttons button {
-    background-color: #eee;
-    border: none;
-    color: #333;
-    cursor: pointer;
-    font-size: 1.2em;
-    font-weight: bold;
-    padding: 8px 10px;
-    line-height: 1;
-    transition: background-color 0.2s ease;
-  }
-  .input-with-buttons button:hover {
-    background-color: #ddd;
-  }
-  .input-with-buttons button:active {
-    background-color: #ccc;
-  }
-  
-  /* Specific button borders within the group */
-  .input-with-buttons .decrement-btn {
-    margin-top: 4px;
-    margin-bottom: 4px;
-    margin-left: 4px;
-    border: 1px solid #ccc;
-    border-right: 2px solid #ccc;
-  }
-  .input-with-buttons .increment-btn {
-    margin-top: 4px;
-    margin-bottom: 4px;
-    margin-right: 4px;
-    border: 1px solid #ccc;
-    border-left: 2px solid #ccc;
-  }
-  
-  /* Adjust main filter button alignment if needed */
-  .form-group button.button-link {
-    margin-left: 0px;
-  }
-  
-  /* Area for displaying results */
-  #filtered-results {
-    /* ... existing styles ... */
-  }
-  
-  /* Area for displaying results */
-  #filtered-results {
-    margin-top: 30px;
-    padding: 15px;
-    border: 1px dashed #ccc;
-    background-color: #fafafa;
-    min-height: 50px;
-    text-align: left;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: center;
-  }
-  
-  /* Styling for individual result boxes */
-  .result-box {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 15px 20px;
-    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    min-width: 200px;
-    flex: 1;
-    max-width: 300px;
-  }
-  
-  .result-box h3 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    color: #333;
-    font-size: 1.1em;
-  }
-  
-  .result-box p {
-    font-size: 1.2em;
-    color: #0056b3;
-    margin-bottom: 0;
-  }
-  
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4; /* Keep background color as a fallback */
+  color: #333;
+  min-height: 100vh;
+}
+
+/* Grid container for the layout */
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two equal columns */
+  grid-template-rows: 1fr 1fr; /* Two equal rows */
+  gap: 10px; /* Spacing between items */
+  width: 100%; /* Full width */
+  height: 100vh; /* Full viewport height */
+  box-sizing: border-box; /* Include padding/border in the width/height */
+  padding: 20px; /* Add some padding around the grid */
+  position: relative; /* Needed for z-index stacking context */
+}
+
+/* Positioning of images */
+.image-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* Prevent images from overflowing */
+  /* Removed background color, image tag will handle it */
+  border-radius: 8px; /* Optional rounded corners */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional shadow */
+}
+
+.image-item img {
+  width: 100%; /* Make images fill their container */
+  height: 100%;
+  object-fit: cover; /* Maintain aspect ratio and cover the area */
+  display: block; /* Remove extra space below image */
+}
+
+/* Specific image positions */
+.top-left {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.top-right {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.bottom-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.bottom-right {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+/* Content area styling (where the text box goes) */
+.content-area {
+  grid-column: 1 / span 2; /* Span both columns */
+  grid-row: 1 / span 2; /* Span both rows */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1; /* Ensure content is on top of images */
+  padding: 20px; /* Add padding if content might touch edges */
+  box-sizing: border-box;
+}
+
+/* Centering container (your existing content container) */
+.container {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 800px; /* Adjust max width */
+  width: 90%; /* Responsive width, slightly wider */
+  max-height: calc(
+    100vh - 80px
+  ); /* Prevent container from exceeding viewport height minus padding */
+  overflow-y: auto; /* Add scroll if content overflows vertically */
+}
+
+/* --- Remaining styles from your original file --- */
+h1 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+}
+
+p {
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+/* Button styling for the link */
+.button-link {
+  display: inline-block;
+  padding: 12px 25px;
+  background-color: #3498db;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.button-link:hover,
+.button-link:focus {
+  background-color: #2980b9;
+  outline: none;
+}
+
+/* Styling for the chart container div (Original ECharts) */
+/* This #main style might not be needed anymore if you only use the slider */
+#main {
+  width: 100%;
+  /* max-width: 1000px; */ /* Let container control max width */
+  height: 500px; /* Keep explicit height for chart */
+  border: 1px solid #eee;
+  margin: 20px auto;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Styling for navigation links like "Back to Home" */
+.navigation-links {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.navigation-links a {
+  color: #3498db;
+  text-decoration: none;
+  padding: 5px 10px;
+  transition: color 0.3s ease;
+}
+
+.navigation-links a:hover {
+  color: #2980b9;
+  text-decoration: underline;
+}
+
+/* --- Styles for Filter Form --- */
+.filter-form {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 150px;
+}
+
+.form-group label {
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+  width: 100%;
+  text-align: center;
+}
+
+.form-group select,
+.form-group button {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  font-size: 1em;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-group select {
+  background-color: #fff;
+}
+
+/* Adjust button alignment within its group */
+.form-group button.button-link {
+  margin-top: auto;
+  width: auto;
+  padding: 10px 20px;
+}
+
+/* Area for displaying results */
+#filtered-results {
+  margin-top: 30px;
+  padding: 15px;
+  border: 1px dashed #ccc;
+  background-color: #fafafa;
+  min-height: 50px;
+  text-align: left;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+/* --- Styles for Time Input Group --- */
+.time-input-group {
+  min-width: 120px;
+}
+
+.input-with-buttons {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 16px;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+.input-with-buttons input[type="number"] {
+  width: 50px;
+  padding: 10px 5px;
+  border: none;
+  text-align: center;
+  font-size: 1em;
+  -moz-appearance: textfield;
+}
+.input-with-buttons input[type="number"]::-webkit-outer-spin-button,
+.input-with-buttons input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.input-with-buttons button {
+  background-color: #eee;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  font-size: 1.2em;
+  font-weight: bold;
+  padding: 8px 10px;
+  line-height: 1;
+  transition: background-color 0.2s ease;
+}
+.input-with-buttons button:hover {
+  background-color: #ddd;
+}
+.input-with-buttons button:active {
+  background-color: #ccc;
+}
+
+/* Specific button borders within the group */
+.input-with-buttons .decrement-btn {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  margin-left: 4px;
+  border: 1px solid #ccc;
+  border-right: 2px solid #ccc;
+}
+.input-with-buttons .increment-btn {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  margin-right: 4px;
+  border: 1px solid #ccc;
+  border-left: 2px solid #ccc;
+}
+
+/* Adjust main filter button alignment if needed */
+.form-group button.button-link {
+  margin-left: 0px;
+}
+
+/* Styling for individual result boxes */
+.result-box {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px 20px;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  min-width: 200px;
+  flex: 1;
+  max-width: 300px;
+}
+
+.result-box h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.result-box p {
+  font-size: 1.2em;
+  color: #0056b3;
+  margin-bottom: 0;
+}
+
+/* ================================== */
+/* === NEW Styles for Image Slider === */
+/* ================================== */
+
+.slider-container {
+  position: relative; /* Needed for absolute positioning of images */
+  width: 90%; /* Adjust width as needed */
+  max-width: 700px; /* Max width for the slider */
+  height: 450px; /* Adjust height based on your chart aspect ratio */
+  margin: 20px auto; /* Center the slider */
+  overflow: hidden; /* Hide images outside the container */
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #fff; /* Background for the slider area */
+}
+
+.slider-images {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex; /* Use flex to align images initially (optional) */
+}
+
+.slider-images img {
+  position: absolute; /* Position images on top of each other */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Scale image while preserving aspect ratio */
+  transition: transform 0.5s ease-in-out; /* SLIDE ANIMATION */
+  transform: translateX(100%); /* Start all images off-screen right */
+  cursor: default; /* Default cursor for non-active images */
+}
+
+.slider-images img.active {
+  transform: translateX(0); /* Bring active image into view */
+  z-index: 1; /* Ensure active image is on top */
+  cursor: zoom-in; /* Indicate it's clickable for zoom */
+}
+
+.slider-images img.previous {
+  transform: translateX(-100%); /* Move previous image off-screen left */
+}
+
+.slider-nav {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.slider-nav button {
+  padding: 8px 15px;
+  margin: 0 10px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.slider-nav button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.slider-nav button:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* ================================= */
+/* === NEW Styles for Zoom Modal === */
+/* ================================= */
+
+.modal-overlay {
+  position: fixed; /* Stay in place even when scrolling */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85); /* Dark semi-transparent background */
+  display: none; /* Hidden by default */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  z-index: 1000; /* Ensure it's on top of everything */
+  padding: 20px; /* Add padding around the image */
+  box-sizing: border-box;
+  cursor: zoom-out; /* Indicate clicking closes it */
+}
+
+/* This is the crucial rule to make the modal appear */
+.modal-overlay.visible {
+  display: flex !important; /* Use !important as a temporary test if needed */
+}
+
+#zoomed-image {
+  display: block;
+  max-width: 95%; /* Limit image width */
+  max-height: 95%; /* Limit image height */
+  object-fit: contain; /* Scale while preserving aspect ratio */
+  border: 3px solid white;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+  cursor: default; /* Normal cursor over the image itself */
+}
+
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 30px;
+  color: #fff;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  line-height: 1;
+  z-index: 1001; /* Above the image */
+}
+
+.close-modal:hover {
+  color: #bbb;
+}

@@ -3,11 +3,76 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bus Data Project - Chart</title>
-    <!-- 1. Include the ECharts library ONLY on this page -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <title>Bus Data Project - Charts</title>
     <!-- Link to the shared CSS file -->
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* --- Slider Specific Styles --- */
+      .slider-container {
+        position: relative; /* Needed for absolute positioning of images */
+        width: 90%; /* Adjust width as needed */
+        max-width: 700px; /* Max width for the slider */
+        height: 450px; /* Adjust height based on your chart aspect ratio */
+        margin: 20px auto; /* Center the slider */
+        overflow: hidden; /* Hide images outside the container */
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        background-color: #fff; /* Background for the slider area */
+      }
+
+      .slider-images {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex; /* Use flex to align images initially (optional) */
+      }
+
+      .slider-images img {
+        position: absolute; /* Position images on top of each other */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* Scale image while preserving aspect ratio */
+        transition: transform 0.5s ease-in-out; /* SLIDE ANIMATION */
+        transform: translateX(100%); /* Start all images off-screen right */
+      }
+
+      .slider-images img.active {
+        transform: translateX(0); /* Bring active image into view */
+        z-index: 1; /* Ensure active image is on top */
+      }
+
+      .slider-images img.previous {
+        transform: translateX(-100%); /* Move previous image off-screen left */
+      }
+
+      .slider-nav {
+        text-align: center;
+        margin-top: 15px;
+      }
+
+      .slider-nav button {
+        padding: 8px 15px;
+        margin: 0 10px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .slider-nav button:hover:not(:disabled) {
+        background-color: #2980b9;
+      }
+
+      .slider-nav button:disabled {
+        background-color: #bdc3c7;
+        cursor: not-allowed;
+      }
+      /* --- End Slider Styles --- */
+    </style>
   </head>
   <body>
     <!-- Start Grid Container -->
@@ -26,16 +91,34 @@
         <img src="images/bus2.jpg" alt="Bus 2" />
       </div>
 
-      <!-- Content Area (contains your original page content) -->
+      <!-- Content Area -->
       <div class="content-area">
-        <!-- Your existing container -->
-        <!-- Note: Removed chart-container class as .container handles centering now -->
         <div class="container">
-          <h1>Average Scheduled Delay per Stop Name</h1>
+          <h1>Charts: Bus Data Analysis</h1>
 
-          <!-- 2. Prepare the DOM element for ECharts ONLY on this page -->
-          <div id="main"></div>
-          <!-- Chart will be rendered here -->
+          <!-- Slider Structure -->
+          <div class="slider-container">
+            <div class="slider-images">
+              <img
+                src="images/Chart1.png"
+                alt="Chart showing [Describe Chart 1]"
+                class="active"
+              />
+              <!-- Start first image as active -->
+              <img
+                src="images/Chart2.png"
+                alt="Chart showing [Describe Chart 2]"
+              />
+              <!-- Add more img tags here if you have more charts -->
+            </div>
+          </div>
+
+          <!-- Slider Navigation -->
+          <div class="slider-nav">
+            <button id="prev-btn" disabled>&laquo; Previous</button>
+            <button id="next-btn">Next &raquo;</button>
+          </div>
+          <!-- End Slider -->
 
           <div class="navigation-links">
             <a href="index.html">&laquo; Back to Home</a> |
@@ -48,7 +131,15 @@
     </div>
     <!-- End Grid Container -->
 
-    <!-- 3. Link to our JavaScript file (use defer) ONLY on this page -->
-    <script src="js/script.js" defer></script>
+    <!-- Link to NEW JavaScript file for the slider -->
+    <script src="js/slider.js" defer></script>
+    <script src="js/slider.js" defer></script>
+
+    <!-- Zoom Modal Structure -->
+    <div id="zoom-modal" class="modal-overlay">
+      <span class="close-modal" title="Close">&times;</span>
+      <img id="zoomed-image" src="" alt="Zoomed Chart" />
+    </div>
+    <!-- End Zoom Modal -->
   </body>
 </html>
