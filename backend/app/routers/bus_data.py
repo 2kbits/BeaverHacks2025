@@ -254,6 +254,7 @@ async def get_stop_names():
     return {"stop_names": UNIQUE_STOP_NAMES}
 
 # Endpoint for the filter page (calculates avg SCHEDULED DELAY for next arrival)
+# Endpoint for the filter page (REVISED LOGIC)
 @router.get("/stop-schedule", response_model=StopScheduleResponse)
 async def get_schedule_for_stop(
     stop_name: str = Query(..., min_length=1, description="The exact name of the bus stop."),
@@ -262,62 +263,74 @@ async def get_schedule_for_stop(
 ):
     """
     For a given stop name and time (hour:minute), finds the next scheduled
-    bus and the average SCHEDULED DELAY associated with that specific
+    bus occurring at or after that time on any day in the dataset,
+    and the average SCHEDULED DELAY associated with that specific
     scheduled arrival time for each route serving the stop.
     """
     check_data_loaded()
     logger.info(f"Request received for stop: '{stop_name}', time: {hour:02d}:{minute:02d}")
 
+    # Filter data for the specific stop first for efficiency
     stop_specific_data = [rec for rec in BUS_DATA if rec.get(COL_STOP_NAME) == stop_name]
     if not stop_specific_data:
         logger.warning(f"No data found for stop name: '{stop_name}'")
         raise HTTPException(status_code=404, detail=f"No data found for stop name: '{stop_name}'")
 
+    # Group remaining data by route
     routes_data = defaultdict(list)
     for record in stop_specific_data:
         route = record.get(COL_ROUTE)
-        if route: routes_data[route].append(record)
+        if route: routes_data[route].append(record) # Store the whole record
 
     if not routes_data:
          logger.warning(f"Data found for stop '{stop_name}', but no valid routes associated.")
          return StopScheduleResponse(stop_name=stop_name, requested_time=f"{hour:02d}:{minute:02d}", routes_at_stop=[])
 
     results_for_routes: List[StopRouteScheduleInfo] = []
-    user_time_obj = time(hour, minute)
+    user_time_obj = time(hour, minute) # The time the user is interested in
 
-    for route, records in routes_data.items():
+    # Process each route serving this stop
+    for route, all_records_for_route in routes_data.items():
         # logger.debug(f"Processing route: {route} for stop '{stop_name}'")
-        next_bus: Optional[Dict] = None
-        min_future_scheduled_dt: Optional[datetime] = None
 
-        valid_records_with_dt = []
-        for record in records:
-             scheduled_arrival_str = record.get(COL_SCHEDULED_ARRIVAL)
-             if not scheduled_arrival_str: continue
-             try:
-                 scheduled_dt = datetime.strptime(scheduled_arrival_str, '%Y-%m-%d %H:%M:%S')
-                 if scheduled_dt.time() >= user_time_obj:
-                     valid_records_with_dt.append((scheduled_dt, record))
-             except (ValueError, TypeError):
-                 # logger.debug(f"Could not parse datetime for record on route {route}: {scheduled_arrival_str}")
-                 continue
+        potential_next_arrivals = []
+        # 1. Parse datetimes and filter by user's requested TIME
+        for record in all_records_for_route:
+            scheduled_arrival_str = record.get(COL_SCHEDULED_ARRIVAL)
+            if not scheduled_arrival_str: continue
+            try:
+                scheduled_dt = datetime.strptime(scheduled_arrival_str, '%Y-%m-%d %H:%M:%S')
+                # Keep only records where the TIME part is >= user's requested time
+                if scheduled_dt.time() >= user_time_obj:
+                    potential_next_arrivals.append((scheduled_dt, record)) # Store tuple (datetime, record_dict)
+            except (ValueError, TypeError):
+                # logger.debug(f"Could not parse datetime for record on route {route}: {scheduled_arrival_str}")
+                continue # Skip records with invalid datetime format
 
-        valid_records_with_dt.sort(key=lambda item: item[0])
+        # 2. Sort the filtered list by FULL DATETIME to find the earliest one
+        potential_next_arrivals.sort(key=lambda item: item[0])
 
-        if valid_records_with_dt:
-            next_scheduled_dt, next_bus = valid_records_with_dt[0]
-            # logger.debug(f"Next bus found for route {route}: ID {next_bus.get(COL_BUS_ID)} scheduled at {next_scheduled_dt}")
+        # 3. Select the first one as the next bus (if any exist)
+        next_bus_record: Optional[Dict] = None
+        if potential_next_arrivals:
+            # The first item in the sorted list is the next arrival at/after the requested time
+            _ , next_bus_record = potential_next_arrivals[0]
+            # logger.debug(f"Next bus found for route {route}: ID {next_bus_record.get(COL_BUS_ID)} scheduled at {next_bus_record.get(COL_SCHEDULED_ARRIVAL)}")
         else:
             # logger.debug(f"No scheduled arrivals found for route {route} at or after {user_time_obj.strftime('%H:%M')}")
-            next_bus = None
+            pass # next_bus_record remains None
 
+        # 4. Calculate Average SCHEDULED DELAY for the Found Schedule Time
         avg_scheduled_delay: Optional[float] = None
-        if next_bus:
-            target_schedule_str = next_bus.get(COL_SCHEDULED_ARRIVAL)
+        if next_bus_record:
+            # Get the exact scheduled arrival string of the *found* next bus
+            target_schedule_str = next_bus_record.get(COL_SCHEDULED_ARRIVAL)
             total_scheduled_delay = 0.0
             delay_count = 0
 
-            for record in records:
+            # Iterate through ALL records for this route/stop again to find matches for the *exact* schedule time string
+            # This averages delays for all observations of a bus scheduled at this specific time (e.g., same scheduled run on different days)
+            for record in all_records_for_route: # Use the already filtered list for this route/stop
                 if record.get(COL_SCHEDULED_ARRIVAL) == target_schedule_str:
                     scheduled_delay = record.get(COL_DELAY_MINUTES)
                     if isinstance(scheduled_delay, float) and math.isfinite(scheduled_delay):
@@ -329,18 +342,22 @@ async def get_schedule_for_stop(
                 avg_scheduled_delay = round(total_scheduled_delay / delay_count, 2)
                 # logger.debug(f"Avg scheduled delay for {route} @ {target_schedule_str}: {avg_scheduled_delay} ({delay_count} records)")
             else:
+                 # This case might happen if the 'next_bus_record' itself had an invalid delay value, or no other records matched exactly
                  logger.warning(f"Found next bus for {route} @ {target_schedule_str}, but no valid scheduled delays found matching this exact time to average.")
-        # else:
+        # else: # No next bus was found, avg_scheduled_delay remains None
             # logger.debug(f"No next bus found for route {route}, cannot calculate scheduled delay.")
 
+        # --- Prepare result for this route ---
         results_for_routes.append(StopRouteScheduleInfo(
             route=route,
-            average_scheduled_delay_at_schedule=avg_scheduled_delay,
-            next_bus_id=next_bus.get(COL_BUS_ID) if next_bus else None,
-            next_scheduled_arrival=next_bus.get(COL_SCHEDULED_ARRIVAL) if next_bus else None,
+            average_scheduled_delay_at_schedule=avg_scheduled_delay, # Use the calculated average
+            next_bus_id=next_bus_record.get(COL_BUS_ID) if next_bus_record else None,
+            next_scheduled_arrival=next_bus_record.get(COL_SCHEDULED_ARRIVAL) if next_bus_record else None,
         ))
 
+    # Sort the final list of routes alphabetically for consistent frontend display
     results_for_routes.sort(key=lambda r: r.route)
     logger.info(f"Returning schedule info for {len(results_for_routes)} routes at stop '{stop_name}'.")
     return StopScheduleResponse(stop_name=stop_name, requested_time=f"{hour:02d}:{minute:02d}", routes_at_stop=results_for_routes)
 
+# --- (End of file) ---
