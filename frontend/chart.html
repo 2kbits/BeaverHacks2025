@@ -10,17 +10,42 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <div class="container chart-container">
-      <h1>Average Scheduled Delay per Bus Route</h1>
-
-      <!-- 2. Prepare the DOM element for ECharts ONLY on this page -->
-      <div id="main"></div> <!-- Chart will be rendered here -->
-
-      <div class="navigation-links">
-         <a href="index.html">&laquo; Back to Home</a>
+    <!-- Start Grid Container -->
+    <div class="grid-container">
+      <!-- Image Quadrants -->
+      <div class="image-item top-left">
+        <img src="images/statue_of_liberty.jpeg" alt="Statue of Liberty" />
+      </div>
+      <div class="image-item top-right">
+        <img src="images/bus_route.jpg" alt="Bus Route" />
+      </div>
+      <div class="image-item bottom-left">
+        <img src="images/bus1.jpg" alt="Bus 1" />
+      </div>
+      <div class="image-item bottom-right">
+        <img src="images/bus2.jpg" alt="Bus 2" />
       </div>
 
-    </div> <!-- end container -->
+      <!-- Content Area (contains your original page content) -->
+      <div class="content-area">
+        <!-- Your existing container -->
+        <!-- Note: Removed chart-container class as .container handles centering now -->
+        <div class="container">
+          <h1>Average Scheduled Delay per Bus Route</h1>
+
+          <!-- 2. Prepare the DOM element for ECharts ONLY on this page -->
+          <div id="main"></div>
+          <!-- Chart will be rendered here -->
+
+          <div class="navigation-links">
+            <a href="index.html">&laquo; Back to Home</a>
+          </div>
+        </div>
+        <!-- end container -->
+      </div>
+      <!-- end content-area -->
+    </div>
+    <!-- End Grid Container -->
 
     <!-- 3. Link to our JavaScript file (use defer) ONLY on this page -->
     <script src="js/script.js" defer></script>

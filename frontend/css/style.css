@@ -1,26 +1,100 @@
+/* frontend/css/style.css */
+
 /* General body styling */
 body {
     font-family: sans-serif;
     margin: 0;
-    padding: 20px;
-    background-color: #f4f4f4;
+    padding: 0;
+    background-color: #f4f4f4; /* Keep background color as a fallback */
     color: #333;
-    display: flex; /* Use flexbox for centering */
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
-    min-height: 90vh; /* Ensure it takes up most of the viewport height */
+    min-height: 100vh;
+    /* REMOVED: display: flex; */
+    /* REMOVED: justify-content: center; */
+    /* REMOVED: align-items: center; */
   }
   
-  /* Centering container */
+  /* Grid container for the layout */
+  .grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    grid-template-rows: 1fr 1fr; /* Two equal rows */
+    gap: 10px; /* Spacing between items */
+    width: 100%; /* Full width */
+    height: 100vh; /* Full viewport height */
+    box-sizing: border-box; /* Include padding/border in the width/height */
+    padding: 20px; /* Add some padding around the grid */
+    position: relative; /* Needed for z-index stacking context */
+  }
+  
+  /* Positioning of images */
+  .image-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Prevent images from overflowing */
+    /* Removed background color, image tag will handle it */
+    border-radius: 8px; /* Optional rounded corners */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional shadow */
+  }
+  
+  .image-item img {
+    width: 100%; /* Make images fill their container */
+    height: 100%;
+    object-fit: cover; /* Maintain aspect ratio and cover the area */
+    display: block; /* Remove extra space below image */
+  }
+  
+  /* Specific image positions */
+  .top-left {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  
+  .top-right {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  
+  .bottom-left {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  
+  .bottom-right {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  
+  /* Content area styling (where the text box goes) */
+  .content-area {
+    grid-column: 1 / span 2; /* Span both columns */
+    grid-row: 1 / span 2; /* Span both rows */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1; /* Ensure content is on top of images */
+    padding: 20px; /* Add padding if content might touch edges */
+    box-sizing: border-box;
+  }
+  
+  /* Centering container (your existing content container) */
   .container {
     background-color: #fff;
     padding: 30px;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    max-width: 1100px; /* Limit max width */
-    width: 95%; /* Responsive width */
+    max-width: 800px; /* Adjust max width */
+    width: 90%; /* Responsive width, slightly wider */
+    max-height: calc(
+      100vh - 80px
+    ); /* Prevent container from exceeding viewport height minus padding */
+    overflow-y: auto; /* Add scroll if content overflows vertically */
   }
+  
+  /* --- Remaining styles from your original file --- */
+  /* (h1, p, button-link, #main, navigation-links, filter-form, etc.) */
+  /* ... ensure all your other styles are still here ... */
   
   h1 {
     color: #2c3e50;
@@ -34,71 +108,71 @@ body {
   
   /* Button styling for the link */
   .button-link {
-    display: inline-block; /* Allows padding and margins */
+    display: inline-block;
     padding: 12px 25px;
-    background-color: #3498db; /* Blue background */
-    color: #ffffff; /* White text */
-    text-decoration: none; /* Remove underline */
-    border-radius: 5px; /* Rounded corners */
+    background-color: #3498db;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 5px;
     font-size: 1em;
-    transition: background-color 0.3s ease; /* Smooth hover effect */
-    border: none; /* Remove default border */
+    transition: background-color 0.3s ease;
+    border: none;
     cursor: pointer;
   }
   
   .button-link:hover,
   .button-link:focus {
-    background-color: #2980b9; /* Darker blue on hover/focus */
+    background-color: #2980b9;
     outline: none;
   }
   
   /* Styling for the chart container div */
   #main {
-    width: 100%; /* Take full width of its container */
-    max-width: 1000px; /* Optional: Limit max width */
-    height: 500px; /* Specific height is required for ECharts */
+    width: 100%;
+    /* max-width: 1000px; */ /* Let container control max width */
+    height: 500px; /* Keep explicit height for chart */
     border: 1px solid #eee;
-    margin: 20px auto; /* Center the chart block */
+    margin: 20px auto;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.05);
   }
   
   /* Styling for navigation links like "Back to Home" */
   .navigation-links {
-      margin-top: 30px;
-      text-align: center;
+    margin-top: 30px;
+    text-align: center;
   }
   
   .navigation-links a {
-      color: #3498db;
-      text-decoration: none;
-      padding: 5px 10px;
-      transition: color 0.3s ease;
+    color: #3498db;
+    text-decoration: none;
+    padding: 5px 10px;
+    transition: color 0.3s ease;
   }
   
   .navigation-links a:hover {
-      color: #2980b9;
-      text-decoration: underline;
+    color: #2980b9;
+    text-decoration: underline;
   }
   
   /* --- Styles for Filter Form --- */
-.filter-form {
+  .filter-form {
     margin-top: 20px;
     padding: 20px;
     border: 1px solid #ddd;
     border-radius: 5px;
     background-color: #f9f9f9;
-    display: flex; /* Arrange items */
-    flex-wrap: wrap; /* Allow wrapping on smaller screens */
-    gap: 20px; /* Space between form groups */
-    justify-content: center; /* Center items */
-    align-items: flex-end; /* Align items to bottom */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: flex-end;
   }
   
   .form-group {
     display: flex;
-    flex-direction: column; /* Stack label and select */
-    align-items: flex-start; /* Align label left */
-    min-width: 150px; /* Minimum width for each group */
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 150px;
   }
   
   .form-group label {
@@ -113,8 +187,8 @@ body {
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1em;
-    width: 100%; /* Make select/button take full width of form-group */
-    box-sizing: border-box; /* Include padding/border in width */
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .form-group select {
@@ -123,123 +197,125 @@ body {
   
   /* Adjust button alignment within its group */
   .form-group button.button-link {
-      margin-top: auto; /* Push button down if label makes group taller */
-      width: auto; /* Allow button to size naturally */
-      padding: 10px 20px; /* Adjust padding */
+    margin-top: auto;
+    width: auto;
+    padding: 10px 20px;
   }
   
   /* Area for displaying results */
   #filtered-results {
-      margin-top: 30px;
-      padding: 15px;
-      border: 1px dashed #ccc;
-      background-color: #fafafa;
-      min-height: 50px;
-      text-align: left;
-  }
-/* --- Styles for Time Input Group --- */
-.time-input-group {
-    min-width: 120px; /* Adjust width as needed */
-}
-
-.input-with-buttons {
-  display: flex;
-  align-items: center; /* Vertically align input and buttons */
-  border: 1px solid #ccc; /* Group them visually */
-  border-radius: 4px;
-  overflow: hidden; /* Keep buttons contained */
-  background-color: #fff; /* Background for the group */
-}
-
-.input-with-buttons input[type="number"] {
-  width: 50px; /* Adjust width of number input */
-  padding: 10px 5px;
-  border: none; /* Remove border from input itself */
-  text-align: center;
-  font-size: 1em;
-  /* Remove spinners (optional, might not work in all browsers) */
-  -moz-appearance: textfield; /* Firefox */
-}
-.input-with-buttons input[type="number"]::-webkit-outer-spin-button,
-.input-with-buttons input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0; /* Safari */
-}
-
-
-.input-with-buttons button {
-  background-color: #eee;
-  border: none;
-  color: #333;
-  cursor: pointer;
-  font-size: 1.2em;
-  font-weight: bold;
-  padding: 8px 10px; /* Adjust padding */
-  line-height: 1; /* Ensure text aligns well */
-  transition: background-color 0.2s ease;
-}
-.input-with-buttons button:hover {
-  background-color: #ddd;
-}
-.input-with-buttons button:active {
-  background-color: #ccc;
-}
-
-/* Specific button borders within the group */
-.input-with-buttons .decrement-btn {
-  border-right: 1px solid #ccc;
-}
-.input-with-buttons .increment-btn {
-  border-left: 1px solid #ccc;
-}
-
-
-/* Adjust main filter button alignment if needed */
-.form-group button.button-link {
-    /* ... existing styles ... */
-}
-
-/* Area for displaying results */
-#filtered-results {
-    /* ... existing styles ... */
-}
-
-/* Area for displaying results */
-#filtered-results {
     margin-top: 30px;
     padding: 15px;
     border: 1px dashed #ccc;
     background-color: #fafafa;
     min-height: 50px;
     text-align: left;
-    display: flex; /* Arrange result boxes side-by-side */
-    flex-wrap: wrap; /* Allow wrapping if needed */
-    gap: 20px; /* Space between boxes */
-    justify-content: center; /* Center boxes */
-}
-
-/* Styling for individual result boxes */
-.result-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  /* --- Styles for Time Input Group --- */
+  .time-input-group {
+    min-width: 120px;
+  }
+  
+  .input-with-buttons {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: #fff;
+  }
+  
+  .input-with-buttons input[type="number"] {
+    width: 50px;
+    padding: 10px 5px;
+    border: none;
+    text-align: center;
+    font-size: 1em;
+    -moz-appearance: textfield;
+  }
+  .input-with-buttons input[type="number"]::-webkit-outer-spin-button,
+  .input-with-buttons input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  .input-with-buttons button {
+    background-color: #eee;
+    border: none;
+    color: #333;
+    cursor: pointer;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 8px 10px;
+    line-height: 1;
+    transition: background-color 0.2s ease;
+  }
+  .input-with-buttons button:hover {
+    background-color: #ddd;
+  }
+  .input-with-buttons button:active {
+    background-color: #ccc;
+  }
+  
+  /* Specific button borders within the group */
+  .input-with-buttons .decrement-btn {
+    border-right: 1px solid #ccc;
+  }
+  .input-with-buttons .increment-btn {
+    border-left: 1px solid #ccc;
+  }
+  
+  /* Adjust main filter button alignment if needed */
+  .form-group button.button-link {
+    /* ... existing styles ... */
+  }
+  
+  /* Area for displaying results */
+  #filtered-results {
+    /* ... existing styles ... */
+  }
+  
+  /* Area for displaying results */
+  #filtered-results {
+    margin-top: 30px;
+    padding: 15px;
+    border: 1px dashed #ccc;
+    background-color: #fafafa;
+    min-height: 50px;
+    text-align: left;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  
+  /* Styling for individual result boxes */
+  .result-box {
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 5px;
     padding: 15px 20px;
-    box-shadow: 1px 1px 4px rgba(0,0,0,0.05);
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.05);
     text-align: center;
-    min-width: 200px; /* Minimum width */
-    flex: 1; /* Allow boxes to grow */
-    max-width: 300px; /* Optional max width */
-}
-
-.result-box h3 {
+    min-width: 200px;
+    flex: 1;
+    max-width: 300px;
+  }
+  
+  .result-box h3 {
     margin-top: 0;
     margin-bottom: 10px;
     color: #333;
     font-size: 1.1em;
-}
-
-.result-box p {
+  }
+  
+  .result-box p {
     font-size: 1.2em;
-    color: #0056b3; /* Different color for the time */
+    color: #0056b3;
     margin-bottom: 0;
-}
+  }
+  

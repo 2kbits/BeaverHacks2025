@@ -8,14 +8,39 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <div class="container">
-      <h1>Welcome to the Bus Delay Analysis</h1>
-      <p>This project analyzes NYC bus data to more accurately predict bus arrival times.</p>
-      <!-- Link styled as a button to navigate to the chart page -->
-      <a href="chart.html" class="button-link">View Overall Chart</a>
-      <!-- Add link to the new filter page -->
-      <a href="filter.html" class="button-link" style="margin-left: 10px;">Bus Delay</a>
+    <!-- Image Container (moved outside .container) -->
+    <div class="grid-container">
+      <div class="image-item top-left">
+        <img src="images/statue_of_liberty.jpeg" alt="Statue of Liberty" />
+      </div>
+      <div class="image-item top-right">
+        <img src="images/bus_route.jpg" alt="Bus Route" />
+      </div>
+      <div class="image-item bottom-left">
+        <img src="images/bus1.jpg" alt="Bus 1" />
+      </div>
+      <div class="image-item bottom-right">
+        <img src="images/bus2.jpg" alt="Bus 2" />
+      </div>
+
+      <div class="content-area">
+        <div class="container">
+          <h1>Welcome to the Bus Delay Analysis</h1>
+          <p>
+            This project analyzes NYC bus data to more accurately predict bus
+            arrival times.
+          </p>
+          <!-- Link styled as a button to navigate to the chart page -->
+          <a href="chart.html" class="button-link">View Overall Chart</a>
+          <!-- Add link to the new filter page -->
+          <a
+            href="filter.html"
+            class="button-link"
+            style="margin-left: 10px;"
+            >Bus Delay</a
+          >
+        </div>
+      </div>
     </div>
-    
   </body>
 </html>
