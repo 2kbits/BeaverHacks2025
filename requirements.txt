@@ -1,2 +1,7 @@
 fastapi
 uvicorn[standard]
+pandas
+numpy
+statsmodels
+scikit-learn # Often useful, include if needed
+# Add any other specific versions if required

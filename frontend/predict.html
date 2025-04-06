@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bus Data Project - Predict Delay</title>
+    <!-- Link to the shared CSS file -->
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      /* Add some specific styles for the prediction form/results */
+      .prediction-form {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        display: flex;
+        flex-direction: column; /* Stack elements vertically */
+        align-items: center; /* Center items horizontally */
+        gap: 15px;
+      }
+      .prediction-form label {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      .prediction-form input[type="time"] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1.1em;
+      }
+      .prediction-form button {
+        /* Use existing button-link style or define new */
+        padding: 10px 20px;
+      }
+      #prediction-result {
+        margin-top: 25px;
+        padding: 15px;
+        border: 1px dashed #ccc;
+        background-color: #fafafa;
+        min-height: 50px;
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: bold;
+      }
+      #prediction-result.loading {
+        color: #888;
+        font-style: italic;
+      }
+      #prediction-result.error {
+        color: #dc3545; /* Red for errors */
+        font-weight: normal;
+      }
+      #prediction-result.success {
+        color: #28a745; /* Green for success */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Start Grid Container -->
+    <div class="grid-container">
+      <!-- Image Quadrants -->
+      <div class="image-item top-left">
+        <img src="images/statue_of_liberty.jpeg" alt="Statue of Liberty" />
+      </div>
+      <div class="image-item top-right">
+        <img src="images/bus_route.jpg" alt="Bus Route" />
+      </div>
+      <div class="image-item bottom-left">
+        <img src="images/bus1.jpg" alt="Bus 1" />
+      </div>
+      <div class="image-item bottom-right">
+        <img src="images/bus2.jpg" alt="Bus 2" />
+      </div>
+
+      <!-- Content Area -->
+      <div class="content-area">
+        <div class="container">
+          <h1>Predict Bus Delay</h1>
+          <p>Enter a time (HH:MM) to predict the average scheduled delay.</p>
+
+          <!-- Prediction Form -->
+          <div class="prediction-form">
+            <label for="predict-time">Time (24-hour format):</label>
+            <input type="time" id="predict-time" name="predict-time" required />
+            <button id="predict-button" class="button-link">
+              Predict Delay
+            </button>
+          </div>
+
+          <!-- Area to display results -->
+          <div id="prediction-result">Enter a time and click predict.</div>
+
+          <div class="navigation-links">
+            <a href="index.html">&laquo; Back to Home</a> |
+            <a href="chart.html">Overall Chart</a> |
+            <a href="filter.html">Bus Delays &raquo;</a>
+          </div>
+        </div>
+        <!-- end container -->
+      </div>
+      <!-- end content-area -->
+    </div>
+    <!-- End Grid Container -->
+
+    <!-- Link to NEW JavaScript file for prediction -->
+    <script src="js/predict.js" defer></script>
+  </body>
+</html>
