@@ -42,6 +42,7 @@
         text-align: center;
         font-size: 1.1em;
         font-weight: bold;
+        line-height: 1.5; /* Improve readability for multi-line results */
       }
       #prediction-result.loading {
         color: #888;
@@ -52,7 +53,12 @@
         font-weight: normal;
       }
       #prediction-result.success {
-        color: #28a745; /* Green for success */
+        color: #333; /* Use default text color for success, maybe make bold in JS */
+        font-weight: normal; /* Reset font weight */
+      }
+      #prediction-result strong {
+         color: #28a745; /* Green for the actual prediction value */
+         font-weight: bold;
       }
     </style>
   </head>
@@ -77,15 +83,22 @@
       <div class="content-area">
         <div class="container">
           <h1>Predict Bus Delay</h1>
-          <p>Enter a time (HH:MM) to predict the average scheduled delay.</p>
+          <!-- UPDATED TEXT to explain the new behavior -->
+          <p>
+            Enter a time (HH:MM). The system will find the next scheduled bus
+            time at or after your input and predict its delay using the AI
+            model (for 5 AV/9 ST).
+          </p>
 
           <!-- Prediction Form -->
           <div class="prediction-form">
             <label for="predict-time">Time (24-hour format):</label>
+            <!-- Using type="time" provides a nice UI element -->
             <input type="time" id="predict-time" name="predict-time" required />
             <button id="predict-button" class="button-link">
-              Predict Delay
+              Predict Next Delay
             </button>
+            <!-- Changed button text slightly for clarity -->
           </div>
 
           <!-- Area to display results -->
@@ -103,7 +116,7 @@
     </div>
     <!-- End Grid Container -->
 
-    <!-- Link to NEW JavaScript file for prediction -->
+    <!-- Link to the JavaScript file for prediction -->
     <script src="js/predict.js" defer></script>
   </body>
 </html>
