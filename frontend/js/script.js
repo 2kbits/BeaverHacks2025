@@ -2,12 +2,11 @@
 
 // Wait for the HTML document to be fully loaded and parsed
 document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM fully loaded and parsed.");
+    console.log("DOM fully loaded and parsed for chart page.");
   
-    // 1. Get the DOM element
+    // 1. Get the DOM element for the chart
     var chartDom = document.getElementById("main");
     if (!chartDom) {
-      // If the container doesn't exist, log an error and stop.
       console.error("Chart container element #main not found in the DOM!");
       return;
     } else {
@@ -19,69 +18,68 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log(
       `Initial container dimensions: width=${computedStyle.width}, height=${computedStyle.height}`
     );
-    if (
-      !computedStyle.width ||
-      computedStyle.width === "0px" ||
-      !computedStyle.height ||
-      computedStyle.height === "0px"
-    ) {
-      console.warn(
-        "Chart container #main has zero width or height. Chart may not be visible."
-      );
-      // Optionally add a message to the div itself
-      // chartDom.textContent = "Chart container has no dimensions.";
+    if (!computedStyle.width || computedStyle.width === "0px" ||
+        !computedStyle.height || computedStyle.height === "0px") {
+      console.warn("Chart container #main has zero width or height. Chart may not be visible.");
+      chartDom.textContent = "Chart container has no dimensions. Ensure CSS is loaded and #main has height/width.";
     }
   
     // 2. Initialize ECharts instance
-    var myChart = null; // Declare outside try block
+    var myChart = null;
     try {
       myChart = echarts.init(chartDom);
       console.log("ECharts instance initialized successfully.");
     } catch (initError) {
       console.error("Error initializing ECharts:", initError);
-      chartDom.textContent = "Failed to initialize charting library.";
+      chartDom.textContent = "Failed to initialize charting library. Check if ECharts script loaded correctly.";
       return; // Stop if initialization fails
     }
   
-    // 3. API endpoint URL (make sure this matches the backend route)
-    const apiUrl = "http://127.0.0.1:8000/api/bus-data";
+    // 3. API endpoint URL (points to the backend endpoint for chart data)
+    const apiUrl = "http://127.0.0.1:8000/api/bus-data"; // Adjust port if needed
   
     // 4. Fetch data from the backend
-    console.log("Attempting to fetch data from:", apiUrl);
+    console.log("Attempting to fetch chart data from:", apiUrl);
+    myChart.showLoading(); // Show loading animation
+  
     fetch(apiUrl)
       .then((response) => {
         console.log("Received response with status:", response.status);
         if (!response.ok) {
-          // If response is not OK, try to read the response body as text for more details
-          return response.text().then((text) => {
-            // Throw an error that includes the status and potentially the server's error message
-            throw new Error(
-              `HTTP error! status: ${response.status}, message: ${text || "No error message body"}`
-            );
+          // Try to get error details from backend response
+          return response.json().then(errData => {
+              throw new Error(errData.detail || `HTTP error ${response.status}`);
+          }).catch(() => {
+              // Fallback if response isn't JSON
+              throw new Error(`HTTP error ${response.status}: Failed to fetch chart data`);
           });
         }
-        // If response is OK, parse it as JSON
         console.log("Response OK, attempting to parse JSON...");
-        return response.json(); // This returns a Promise
+        return response.json();
       })
       .then((data) => {
+        myChart.hideLoading(); // Hide loading animation
         console.log("Successfully parsed JSON data:", data);
   
         // --- Data Validation ---
-        if (
-          !data ||
-          typeof data !== "object" ||
-          !Array.isArray(data.routes) ||
-          !Array.isArray(data.avg_delays)
-        ) {
-          throw new Error(
-            "Invalid data structure received from backend. Expected object with 'routes' and 'avg_delays' arrays."
-          );
+        if (!data || typeof data !== "object" || !Array.isArray(data.routes) || !Array.isArray(data.avg_delays)) {
+          throw new Error("Invalid data structure received from backend. Expected object with 'routes' and 'avg_delays' arrays.");
         }
         if (data.routes.length !== data.avg_delays.length) {
-          throw new Error(
-            "Data mismatch: The number of routes does not match the number of average delays."
-          );
+          throw new Error("Data mismatch: The number of routes does not match the number of average delays.");
+        }
+        if (data.routes.length === 0) {
+            console.warn("Received empty data arrays for chart. Displaying empty chart.");
+            // Optionally display a message in the chart area
+            chartDom.textContent = "No data available to display the chart.";
+            // Set empty data to ECharts to clear any previous chart
+            myChart.setOption({
+                title: { text: "Average Scheduled Delay per Bus Route", left: "center" },
+                xAxis: { name: "Average Scheduled Delay (minutes)" },
+                yAxis: { name: "Bus Route", data: [] }, // Empty data
+                series: [{ name: "Avg Delay (min)", type: "bar", data: [] }] // Empty data
+            }, true);
+            return; // Stop further processing if data is empty
         }
         console.log("Data structure seems valid.");
   
@@ -98,57 +96,53 @@ document.addEventListener("DOMContentLoaded", function () {
               if (!params || params.length === 0) return "";
               var routeName = params[0].name; // Category from Y axis
               var avgDelay = params[0].value; // Value from X axis
-              return `${routeName}<br/>Avg Scheduled Delay: ${avgDelay.toFixed(2)} min`; // Format value
+              return `${routeName}<br/>Avg Scheduled Delay: ${avgDelay.toFixed(2)} min`;
             },
           },
           grid: {
-            left: "15%", // Increased left padding for route names
+            left: "15%", // Increased left padding for potentially long route names
             right: "5%",
             bottom: "3%",
-            containLabel: true,
+            containLabel: true, // Ensures labels fit within the grid area
           },
           xAxis: { // Value axis (Horizontal)
             type: "value",
             name: "Average Scheduled Delay (minutes)",
             nameLocation: "middle",
-            nameGap: 25,
+            nameGap: 25, // Space between axis name and axis line
             axisLabel: {
-                formatter: '{value} min'
+                formatter: '{value} min' // Add 'min' suffix to labels
             }
           },
           yAxis: { // Category axis (Vertical)
             type: "category",
             name: "Bus Route",
             nameLocation: "middle",
-            nameGap: 85, // Adjust needed space for route names
-            data: data.routes, // Use the 'routes' array
+            nameGap: 85, // Adjust needed space for route names (might need tweaking)
+            data: data.routes, // Use the 'routes' array from fetched data
             axisLabel: {
-                interval: 0, // Show all labels
+                interval: 0, // Show all labels. Use 'auto' if too crowded.
             }
           },
           series: [
             {
-              name: "Avg Delay (min)",
+              name: "Avg Delay (min)", // Matches legend/tooltip
               type: "bar",
-              data: data.avg_delays, // Use the 'avg_delays' array
+              data: data.avg_delays, // Use the 'avg_delays' array from fetched data
               emphasis: {
-                focus: "series",
+                focus: "series", // Highlight bars on hover
               },
               itemStyle: {
-                borderRadius: [0, 3, 3, 0], // Rounded right corners
+                borderRadius: [0, 3, 3, 0], // Slightly rounded right corners
               },
-              // Optional: Show labels on bars
-              // label: {
-              //     show: true,
-              //     position: 'right', // Adjust position based on value (positive/negative) if needed
-              //     formatter: '{c}' // {c} represents the data value
-              // }
+              // Optional: Show labels directly on bars
+              // label: { show: true, position: 'right', formatter: '{c}' }
             },
           ],
-          // Optional: DataZoom for vertical scrolling
+          // Optional: Add dataZoom for scrolling if many routes
           // dataZoom: [
-          //     { type: 'inside', yAxisIndex: 0, start: 0, end: 100 },
-          //     { type: 'slider', yAxisIndex: 0, start: 0, end: 100 }
+          //     { type: 'inside', yAxisIndex: 0, startValue: 0, endValue: 19 }, // Show first 20 routes initially
+          //     { type: 'slider', yAxisIndex: 0, startValue: 0, endValue: 19 }
           // ],
         };
         console.log("ECharts option object created:", option);
@@ -156,36 +150,39 @@ document.addEventListener("DOMContentLoaded", function () {
         // --- 6. Display the chart using the configuration ---
         if (myChart) {
           try {
-            myChart.setOption(option, true); // Use true to clear previous options if any
+            // Use true to clear previous options and overwrite
+            myChart.setOption(option, true);
             console.log("myChart.setOption call SUCCEEDED.");
           } catch (renderError) {
             console.error("ERROR during myChart.setOption:", renderError);
-            // Display error message in the chart container
             chartDom.textContent = "Error rendering chart: " + renderError.message;
           }
         } else {
+          // Should not happen if initialization succeeded, but good practice
           console.error("Cannot setOption because myChart instance is not valid.");
         }
       })
       .catch((error) => {
-        // Catch errors from fetch, JSON parsing, or data validation
-        console.error("Error in fetch/processing chain:", error);
+        myChart.hideLoading(); // Hide loading animation on error too
+        console.error("Error in fetch/processing chain for chart:", error);
         // Display error message in the chart container
         chartDom.textContent = "Failed to load or process chart data: " + error.message;
       });
   
     // --- Optional: Add responsiveness ---
+    let resizeTimer;
     window.addEventListener("resize", function () {
       if (myChart) {
-        // Use a timeout (debounce) to avoid excessive resize calls during rapid resizing
-        setTimeout(function () {
-          try {
-            myChart.resize();
-            console.log("Chart resized.");
-          } catch (resizeError) {
-              console.error("Error during chart resize:", resizeError);
-          }
-        }, 200);
+        // Debounce resize event to avoid excessive calls
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+            try {
+              myChart.resize();
+              console.log("Chart resized.");
+            } catch (resizeError) {
+                console.error("Error during chart resize:", resizeError);
+            }
+        }, 200); // Adjust delay as needed
       }
     });
   
