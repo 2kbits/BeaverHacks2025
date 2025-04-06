@@ -3,40 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bus Data Project - Finder</title>
-    <!-- Link to the shared CSS file -->
+    <title>Bus Stop Schedule Finder</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <!-- Start Grid Container -->
+    <!-- Grid Container -->
     <div class="grid-container">
       <!-- Image Quadrants -->
-      <div class="image-item top-left">
-        <img src="images/statue_of_liberty.jpeg" alt="Statue of Liberty" />
-      </div>
-      <div class="image-item top-right">
-        <img src="images/bus_route.jpg" alt="Bus Route" />
-      </div>
-      <div class="image-item bottom-left">
-        <img src="images/bus1.jpg" alt="Bus 1" />
-      </div>
-      <div class="image-item bottom-right">
-        <img src="images/bus2.jpg" alt="Bus 2" />
-      </div>
+      <div class="image-item top-left"><img src="images/statue_of_liberty.jpeg" alt="Statue of Liberty" /></div>
+      <div class="image-item top-right"><img src="images/bus_route.jpg" alt="Bus Route" /></div>
+      <div class="image-item bottom-left"><img src="images/bus1.jpg" alt="Bus 1" /></div>
+      <div class="image-item bottom-right"><img src="images/bus2.jpg" alt="Bus 2" /></div>
 
-      <!-- Content Area (contains your original page content) -->
+      <!-- Content Area -->
       <div class="content-area">
-        <!-- Your existing container -->
         <div class="container">
-          <h1>Manhattan Bus Delay Data</h1>
-          <p>Select criteria to filter the bus data analysis.</p>
+          <h1>Bus Stop Schedule Finder</h1>
+          <p>Select a bus stop and time to find upcoming schedules.</p> <!-- Updated text -->
 
           <form id="filter-form" class="filter-form">
-            <!-- Route Selection -->
+            <!-- Stop Name Selection (Changed back to select) -->
             <div class="form-group">
-              <label for="route-select">Select Route:</label>
-              <select name="route" id="route-select">
-                <option value="" disabled selected>Loading routes...</option>
+              <label for="stop-select">Select Stop:</label>
+              <select name="stop_name" id="stop-select" required>
+                <option value="" disabled selected>Loading stops...</option>
+                <!-- Options will be populated by JavaScript -->
               </select>
             </div>
 
@@ -44,20 +35,9 @@
             <div class="form-group time-input-group">
               <label for="hour-input">Hour (0-23):</label>
               <div class="input-with-buttons">
-                <button type="button" class="decrement-btn" id="hour-decrement">
-                  -
-                </button>
-                <input
-                  type="number"
-                  id="hour-input"
-                  name="hour"
-                  min="0"
-                  max="23"
-                  value="0"
-                />
-                <button type="button" class="increment-btn" id="hour-increment">
-                  +
-                </button>
+                <button type="button" class="decrement-btn" id="hour-decrement">-</button>
+                <input type="number" id="hour-input" name="hour" min="0" max="23" value="0" />
+                <button type="button" class="increment-btn" id="hour-increment">+</button>
               </div>
             </div>
 
@@ -65,40 +45,21 @@
             <div class="form-group time-input-group">
               <label for="minute-input">Minute (0-59):</label>
               <div class="input-with-buttons">
-                <button
-                  type="button"
-                  class="decrement-btn"
-                  id="minute-decrement"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  id="minute-input"
-                  name="minute"
-                  min="0"
-                  max="59"
-                  value="0"
-                />
-                <button
-                  type="button"
-                  class="increment-btn"
-                  id="minute-increment"
-                >
-                  +
-                </button>
+                <button type="button" class="decrement-btn" id="minute-decrement">-</button>
+                <input type="number" id="minute-input" name="minute" min="0" max="59" value="0" />
+                <button type="button" class="increment-btn" id="minute-increment">+</button>
               </div>
             </div>
 
             <!-- Apply Filter Button -->
             <div class="form-group">
               <button type="button" id="filter-button" class="button-link">
-                Apply Filter
+                Find Schedules
               </button>
             </div>
           </form>
 
-          <!-- Area to display results later -->
+          <!-- Area to display results -->
           <div id="filtered-results"></div>
 
           <div class="navigation-links">
@@ -106,13 +67,9 @@
             <a href="chart.html">View Overall Chart &raquo;</a>
           </div>
         </div>
-        <!-- end container -->
       </div>
-      <!-- end content-area -->
     </div>
-    <!-- End Grid Container -->
-
-    <!-- Link to the JavaScript file for this page -->
+    <!-- Link to JS -->
     <script src="js/filter.js" defer></script>
   </body>
 </html>

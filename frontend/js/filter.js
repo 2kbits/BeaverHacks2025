@@ -1,8 +1,10 @@
+// frontend/js/filter.js
+
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Filter page DOM loaded.");
   
     // --- Get references to elements ---
-    const routeSelect = document.getElementById("route-select");
+    const stopSelect = document.getElementById("stop-select");
     const hourInput = document.getElementById("hour-input");
     const hourDecrement = document.getElementById("hour-decrement");
     const hourIncrement = document.getElementById("hour-increment");
@@ -10,51 +12,37 @@ document.addEventListener("DOMContentLoaded", function () {
     const minuteDecrement = document.getElementById("minute-decrement");
     const minuteIncrement = document.getElementById("minute-increment");
     const filterButton = document.getElementById("filter-button");
-    const resultsDiv = document.getElementById("filtered-results"); // Area to display
-    // results
+    const resultsDiv = document.getElementById("filtered-results");
   
     // --- Check if all required elements exist ---
     if (
-      !routeSelect ||
-      !hourInput ||
-      !hourDecrement ||
-      !hourIncrement ||
-      !minuteInput ||
-      !minuteDecrement ||
-      !minuteIncrement ||
-      !filterButton ||
-      !resultsDiv // Also check resultsDiv
+      !stopSelect ||
+      !hourInput || !hourDecrement || !hourIncrement ||
+      !minuteInput || !minuteDecrement || !minuteIncrement ||
+      !filterButton || !resultsDiv
     ) {
       console.error("Required form or display elements not found in the DOM!");
-      // Optionally display an error message on the page itself
-      if (resultsDiv)
-        resultsDiv.textContent =
-          "Error: Page elements missing. Cannot initialize filters.";
-      else
-        console.error(
-          "Results display area (#filtered-results) is also missing."
-        );
-      return; // Stop execution if essential elements are missing
+      if (resultsDiv) resultsDiv.innerHTML = '<p style="color: red;">Error: Page elements missing.</p>';
+      return;
     }
   
-    // --- API endpoint URLs ---
-    const optionsApiUrl = "http://127.0.0.1:8000/api/filter-options";
-    const findArrivalBaseUrl = "http://127.0.0.1:8000/api/find-arrival";
+    // --- API endpoint URL ---
+    const apiBaseUrl = "http://127.0.0.1:8000/api"; // Adjust if needed
+    const stopNamesApiUrl = `${apiBaseUrl}/stop-names`;
+    const scheduleApiBaseUrl = `${apiBaseUrl}/stop-schedule`;
   
-    // --- Helper function to populate route select dropdown ---
-    function populateRouteSelect(selectElement, optionsArray, defaultLabel) {
+    // --- Helper function to populate stop select dropdown ---
+    function populateStopSelect(selectElement, optionsArray, defaultLabel) {
       selectElement.innerHTML = ""; // Clear existing options
       const defaultOption = document.createElement("option");
-      defaultOption.value = ""; // Important: empty value for the default/placeholder
+      defaultOption.value = "";
       defaultOption.textContent = defaultLabel;
-      if (defaultLabel.includes("Loading")) {
-        defaultOption.disabled = true; // Disable "Loading..."
-      } else {
-        defaultOption.selected = true; // Make "Select..." or error message selected
+      if (defaultLabel.includes("Loading") || defaultLabel.includes("Error") || defaultLabel.includes("No stops")) {
+        defaultOption.disabled = true;
       }
+      defaultOption.selected = true;
       selectElement.appendChild(defaultOption);
   
-      // Add actual route options
       optionsArray.forEach((optionValue) => {
         const option = document.createElement("option");
         option.value = optionValue;
@@ -63,101 +51,71 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
   
-    // --- Fetch filter options (routes) and populate dropdown ---
-    console.log("Fetching filter options from:", optionsApiUrl);
-    fetch(optionsApiUrl)
+    // --- Fetch stop names and populate dropdown ---
+    console.log("Fetching stop names from:", stopNamesApiUrl);
+    fetch(stopNamesApiUrl)
       .then((response) => {
         if (!response.ok) {
-          // Try to get more details from the response body on error
-          return response.text().then((text) => {
-            throw new Error(
-              `HTTP error ${response.status}: ${
-                text || "Failed to fetch filter options"
-              }`
-            );
+          // Try to get error detail from backend response
+          return response.json().then(errData => {
+              throw new Error(errData.detail || `HTTP error ${response.status}`);
+          }).catch(() => {
+              // Fallback if response is not JSON or has no detail
+              throw new Error(`HTTP error ${response.status}: Failed to fetch stop names`);
           });
         }
         return response.json();
       })
       .then((data) => {
-        console.log("Filter options received:", data);
-  
-        // --- CORRECTED CHECK ---
-        // Check specifically if data exists, is an object, and data.routes is an array
-        if (data && typeof data === "object" && Array.isArray(data.routes)) {
-          populateRouteSelect(routeSelect, data.routes, "-- Select a Route --");
-          console.log("Route dropdown populated.");
-          // We ignore data.hours here as it's not used for a dropdown anymore
+        console.log("Stop names received:", data);
+        if (data && Array.isArray(data.stop_names)) {
+          if (data.stop_names.length > 0) {
+              populateStopSelect(stopSelect, data.stop_names, "-- Select a Stop --");
+              console.log("Stop dropdown populated.");
+          } else {
+              populateStopSelect(stopSelect, [], "-- No stops found --");
+              console.warn("No stop names returned from API.");
+          }
         } else {
-          // Throw error if data is not an object or data.routes is not a valid array
-          console.error(
-            "Invalid data structure received for filter options:",
-            data
-          );
-          throw new Error(
-            "Invalid data structure received for filter options (expected object with 'routes' array)."
-          );
+          throw new Error("Invalid data structure received for stop names.");
         }
       })
       .catch((error) => {
-        console.error("Error fetching or populating filter options:", error);
+        console.error("Error fetching or populating stop names:", error);
+        populateStopSelect(stopSelect, [], "Error loading stops");
+        // Display error prominently if resultsDiv exists
         if (resultsDiv) {
-          // Display error in results area if possible
-          resultsDiv.textContent = "Error loading filter options: " + error.message;
+          resultsDiv.innerHTML = `<p style="color: red;">Error loading stop options: ${error.message}. Please ensure the backend is running and data is loaded.</p>`;
         }
-        // Ensure dropdown shows an error state
-        routeSelect.innerHTML =
-          '<option value="" disabled selected>Error loading routes</option>';
       });
   
-    // --- Helper function to handle increment/decrement WITH WRAP-AROUND ---
-    function setupIncrementDecrement(
-      inputElem,
-      decBtn,
-      incBtn,
-      minVal,
-      maxVal
-    ) {
+  
+    // --- Helper function to handle increment/decrement ---
+    function setupIncrementDecrement(inputElem, decBtn, incBtn, minVal, maxVal) {
       decBtn.addEventListener("click", () => {
         let currentValue = parseInt(inputElem.value, 10);
-        if (isNaN(currentValue) || currentValue < minVal || currentValue > maxVal) {
-          currentValue = minVal;
-        }
+        if (isNaN(currentValue) || currentValue < minVal || currentValue > maxVal) currentValue = minVal;
         let newValue = currentValue === minVal ? maxVal : currentValue - 1;
         inputElem.value = newValue;
-        inputElem.dispatchEvent(new Event("input", { bubbles: true })); // Trigger
-        // input event
+        inputElem.dispatchEvent(new Event("input", { bubbles: true }));
       });
-  
       incBtn.addEventListener("click", () => {
         let currentValue = parseInt(inputElem.value, 10);
-        if (isNaN(currentValue) || currentValue < minVal || currentValue > maxVal) {
-          currentValue = minVal;
-        }
+        if (isNaN(currentValue) || currentValue < minVal || currentValue > maxVal) currentValue = minVal;
         let newValue = currentValue === maxVal ? minVal : currentValue + 1;
         inputElem.value = newValue;
-        inputElem.dispatchEvent(new Event("input", { bubbles: true })); // Trigger
-        // input event
+        inputElem.dispatchEvent(new Event("input", { bubbles: true }));
       });
-  
-      // Input listener for typed values (clamps, doesn't wrap)
       inputElem.addEventListener("input", () => {
-        let valueStr = inputElem.value;
-        if (valueStr === "") return;
+        let valueStr = inputElem.value; if (valueStr === "") return;
         let currentValue = parseInt(valueStr, 10);
-        if (isNaN(currentValue)) {
-          inputElem.value = minVal;
-          return;
-        }
-        if (currentValue < minVal) inputElem.value = minVal;
-        else if (currentValue > maxVal) inputElem.value = maxVal;
+        if (isNaN(currentValue)) { inputElem.value = minVal; return; }
+        if (currentValue < minVal) inputElem.value = minVal; else if (currentValue > maxVal) inputElem.value = maxVal;
       });
-  
-      // Blur listener to finalize validation
       inputElem.addEventListener("blur", () => {
-        let currentValue = parseInt(inputElem.value, 10);
-        if (isNaN(currentValue) || currentValue < minVal) inputElem.value = minVal;
-        else if (currentValue > maxVal) inputElem.value = maxVal;
+          if (inputElem.value === "") inputElem.value = minVal;
+          let currentValue = parseInt(inputElem.value, 10);
+          if (isNaN(currentValue) || currentValue < minVal) inputElem.value = minVal; else if (currentValue > maxVal) inputElem.value = maxVal;
       });
     }
   
@@ -167,112 +125,111 @@ document.addEventListener("DOMContentLoaded", function () {
   
     // --- Event listener for the main filter button ---
     filterButton.addEventListener("click", function () {
-      const selectedRoute = routeSelect.value;
+      const selectedStopName = stopSelect.value; // Read from select dropdown
       const selectedHour = hourInput.value;
-      const selectedMinute = minuteInput.value; // Still captured, though not used in
-      // API call yet
+      const selectedMinute = minuteInput.value;
   
       console.log("Filter button clicked!");
-      console.log("Selected Route:", selectedRoute || "None");
+      console.log("Selected Stop Name:", selectedStopName);
       console.log("Selected Hour:", selectedHour);
       console.log("Selected Minute:", selectedMinute);
   
-      // Clear previous results and show loading message
-      resultsDiv.innerHTML = "<p><em>Loading arrival data...</em></p>";
+      resultsDiv.innerHTML = "<p><em>Loading schedule data...</em></p>";
   
-      // --- Validate inputs before fetching ---
-      if (!selectedRoute) {
-        // Check if a route is selected (value is not empty)
-        resultsDiv.innerHTML = '<p style="color: red;">Please select a route.</p>';
-        return; // Stop if no route selected
+      // --- Validate inputs ---
+      if (!selectedStopName) { // Check if a stop is selected
+        resultsDiv.innerHTML = '<p style="color: red;">Please select a stop.</p>';
+        return;
       }
-      // Basic check for hour/minute (should be valid due to input type/listeners)
       if (selectedHour === "" || selectedMinute === "") {
-        resultsDiv.innerHTML =
-          '<p style="color: red;">Please ensure hour and minute are set.</p>';
+        resultsDiv.innerHTML = '<p style="color: red;">Please ensure hour and minute are set.</p>';
         return;
       }
   
-      // --- Construct URL for the find-arrival endpoint ---
-      // Using encodeURIComponent for the route name is good practice
-      const findApiUrl = `${findArrivalBaseUrl}?route=${encodeURIComponent(
-        selectedRoute
-      )}&hour=${selectedHour}`;
-      console.log("Fetching arrival data from:", findApiUrl);
+      // --- Construct URL for the stop-schedule endpoint ---
+      const findApiUrl = `${scheduleApiBaseUrl}?stop_name=${encodeURIComponent(
+        selectedStopName // Use selected value from dropdown
+      )}&hour=${selectedHour}&minute=${selectedMinute}`;
+      console.log("Fetching schedule data from:", findApiUrl);
   
-      // --- Fetch data from the find-arrival endpoint ---
+      // --- Fetch data ---
       fetch(findApiUrl)
         .then((response) => {
-          console.log("Find arrival response status:", response.status);
-          // Check for specific error codes first
-          if (response.status === 404) {
+          console.log("Stop schedule response status:", response.status);
+          if (!response.ok) {
+            // Try to parse error details from JSON response if possible
             return response.json().then((errorData) => {
+              // Throw an error with the detail message from the backend
               throw new Error(
                 errorData.detail ||
-                  "No arrival data found for the selected criteria."
+                  `HTTP error ${response.status}: Failed to fetch schedule data`
               );
-            });
-          }
-          // Check for other non-OK statuses
-          if (!response.ok) {
-            return response.text().then((text) => {
-              throw new Error(
-                `HTTP error ${response.status}: ${
-                  text || "Failed to fetch arrival data"
-                }`
-              );
+            }).catch(() => {
+                // Fallback if response isn't JSON
+                throw new Error(`HTTP error ${response.status}: Failed to fetch schedule data`);
             });
           }
           // If response is OK (200)
           return response.json();
         })
         .then((data) => {
-          console.log("Arrival data received:", data);
-          // Check if data has the expected properties
-          if (data && data.average_delay !== undefined && data.scheduled_arrival) {
-            // --- Display the results ---
-            resultsDiv.innerHTML = `
-              <div class="result-box">
-                <h3>Scheduled Time</h3>
-                <p>${formatDateTime(data.scheduled_arrival)}</p>
-              </div>
-              <div class="result-box">
-                <h3>Average Delay</h3>
-                <p>${data.average_delay} minutes</p>
-              </div>
+          console.log("Schedule data received:", data);
+          // --- Display the results (Using updated field name) ---
+          if (data && Array.isArray(data.routes_at_stop)) {
+            if (data.routes_at_stop.length === 0) {
+               resultsDiv.innerHTML = `<p>No upcoming schedules found for stop '${data.stop_name}' around ${data.requested_time}.</p>`;
+               return;
+            }
+  
+            let resultsHtml = `
+              <h2>Schedule for ${data.stop_name} at or after ${data.requested_time}</h2>
+              <div class="results-grid">
             `;
+            data.routes_at_stop.forEach((routeInfo) => {
+              // Use the new field name here: average_prediction_error_at_schedule
+              const avgPredErrorText = routeInfo.average_prediction_error_at_schedule !== null
+                  ? `${routeInfo.average_prediction_error_at_schedule} min`
+                  : "N/A";
+  
+              resultsHtml += `
+                <div class="result-route-box">
+                  <h3>Route: ${routeInfo.route}</h3>
+                  <p><strong>Next Bus ID:</strong> ${routeInfo.next_bus_id || "None found"}</p>
+                  <p><strong>Next Scheduled:</strong> ${formatDateTime(routeInfo.next_scheduled_arrival) || "None found"}</p>
+                  <p><strong>Avg. Prediction Error (for this schedule):</strong> ${avgPredErrorText}</p>
+                </div>
+              `;
+            });
+            resultsHtml += `</div>`;
+            resultsDiv.innerHTML = resultsHtml;
           } else {
-            // Fallback error if data format is wrong despite 200 OK
-            resultsDiv.innerHTML =
-              "<p>Arrival data received, but format is incorrect.</p>";
-            console.warn("Received data format unexpected:", data);
+            resultsDiv.innerHTML = "<p>Schedule data received, but format is incorrect.</p>";
+            console.error("Received data format unexpected:", data);
           }
         })
         .catch((error) => {
-          console.error("Error fetching or displaying arrival data:", error);
+          console.error("Error fetching or displaying schedule data:", error);
           // Display the specific error message caught
           resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
         });
     }); // End of filterButton listener
   
-    // --- Helper function to format date/time string (optional but nice) ---
+    // --- Helper function to format date/time string ---
     function formatDateTime(dateTimeString) {
-      if (!dateTimeString) return "N/A";
+      if (!dateTimeString) return null; // Return null if no string
       try {
         const date = new Date(dateTimeString);
-        // Use Intl for better locale support if needed, or keep simple
-        return date.toLocaleString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
+        // Format to show time clearly, maybe day if needed
+        return date.toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",
-          hour12: false,
+          hour12: true, // Use AM/PM for readability
         });
       } catch (e) {
         console.warn("Could not format date:", dateTimeString, e);
         return dateTimeString; // Return original string if formatting fails
       }
     }
+  
   }); // End of DOMContentLoaded listener
   
